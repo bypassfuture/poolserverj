@@ -1,0 +1,21 @@
+
+syntax: regexp
+^target$
+syntax: regexp
+^poolserverj-core/target$
+syntax: regexp
+^poolserverj-main/target$
+syntax: regexp
+^bitcoin-jsonrpc/target$
+syntax: regexp
+^poolserverj-core/target$
+syntax: regexp
+^poolserverj-core/target$
+syntax: regexp
+^poolserverj-core/target/bitcoin-poolserverj-core-0\.0\.1-SNAPSHOT\.jar$
+syntax: regexp
+^poolserverj-core/target/maven-archiver$
+syntax: regexp
+^poolserverj-core/target/bitcoin-poolserverj-core-0\.0\.1-SNAPSHOT\.jar$
+syntax: regexp
+^poolserverj-core/target$

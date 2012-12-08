@@ -1,0 +1,179 @@
+[0.3.0.FINAL]
+- partial implementation of worker cache preloading.  This is not active yet.
+- fix: stop checking if continuation state is initial.  It can be if a previous Jetty filter has suspended/resumed the request.  In that case it immediately sends and empty LP response.  This might be the cause of a bug where cgminer immediately sends another LP.  This turns into a spam loop.  This only seems to be triggered under heavy load and only seems to happen with cgminer clients connected.
+- added commented out condition to stop manual block checks if native LP enabled and verification off.
+- remove warning for native LP when a manual block check is fired.  We want this occur in most circumstances.
+- extra trace targets for longpoll empty and expired responses.
+- fix: handle clients sending longpoll without trailing slash.  This can result in the LP request being routed through the main handler and returning immediately setting up request spamming loop.  This patch checks for the LP url from the main handler and redirects to the LP handler if it's found.
+- add threadDump method to mgmt interface
+- add timeout to notify-lp-clients-executor thread in case dispatch threads do not report back correctly and counters aren't updated.  Solved a problem where counter mismatch can prevent the thread from ever finishing thus hogging the executor and preventing future long poll cycles.
+- add shutdown check to lp dispatch timeout
+
+[0.3.0rc1]
+
+- license change to GPL v3.0
+- added a temporary logger to record all stages of submission where a real solution is found.	
+- fix from <Eleuthria>: convert submitted data to lowercase, some miners return in uppercase resulting in failed work lookup from map.	
+- new mgmt interface methods: 
+	?method=setCacheSize&source=<mySourceName>&value=<value> 
+	?method=setMaxConcurrentDl&source=<mySourceName>&value=<value> 
+	?method=setMaxWorkAgeToFlush&source=<mySourceName>&value=<value> 
+	?method=setAllCacheSize&value=<value> 
+	?method=setAllMaxConcurrentDl&value=<value> 
+	?method=setAllMaxWorkAgeToFlush&value=<value>	
+	?method=listWorkerCache
+	
+- force cache to be trimmed if shrinking cache size.  If left untrimmed this can result in a lag when all the work expires.  Normally as work is request it will open up a slot for fresh work to be fetched.  However due to cache being oversized this doesn't happen.  It's possible for the entire to end up getting purged so the server has to catch up filling the cache from daemon while servicing requests.	
+- fix: WorkerProxy was case sensitive.  In cases where database case was different to user supplied case of worker name this would cause a cache miss and force a db query every time.  Thanks to <Eleuthria> for finding.	
+- complete rewrite of longpolling code
+- added async LP dispatch.		
+- restructured repo to include dependencies as source projects instead binaries
+- fix: clean up longpoll shutdown.  Missed a threadpool executor which was preventing JVM exit.
+- fix: longpoll connection are now all explicity closed on shutdown.  Some miners were not registering the closed socket so don't attempt to reconnect to LP when the server restarts.	
+- fix: prevent work being served from a source until it's confirmed on the new block 
+- pause work fetching for source until it's confirm on the new block 
+- add prev_block_hash checks to each incoming work as a new block indicator.  This reduces the amount of polling needed when not in native longpoll mode.	
+- fix: set autoReconnect=true on JDBC connections.  worker caching can leave long intervals between uses of the connection causing sql server to time it out.	
+- add fixed time worker cache eviction strategy.  resolves issue #6 
+- implementation of longpoll connection counting and enforcement of optional limits
+- trace logging with target groups for granular tracing.	
+- clean up of sample properties file add new config options	
+- fix: nullpointer if share output file not specified.
+- fix: nullpointer if request output file not specified.
+- addresses issue #7.  When setting worker IP first check X-Forwarded-For header then falls back to remoteAddr.  This covers situations where the server is behind a load balancing proxy.	
+- fix: use username.intern() to gain a per user canonical sync lock object. Prevents an obscure bug where two near simultaneous initial connections from one worker can result in multiple db lookups where one hasn't been put into the cache before the other is looked up.
+- add keep-alive header to json-rpc client requests.	
+
+improve worksource syncing on block change
+ - prevent entries entering cache during out of sync period
+ - synchronize the change of sync status process
+ - remove redundant sourcesOnCurrentBlockArray
+ - change NotifyLongpollClients thread to a Runnable task to avoid having to start up a new thread.
+ - acceptNotifyBlockChange now had double check inside sync block to prevent double accepts.
+ - prestart LP executor threads
+ - fix mismatched sync objects for block change syncing
+ - workSource resync moved inside sync block
+
+
+native longpolling
+ - add registration of native-enabled sources to native lp listener
+ - improved debug logging
+ - address handling using canonical host name
+ - enable verification request to report success or failure
+
+
+
+[0.2.10] - unreleased
+
+- fix: WorkSource request throttling was only activating for HTTP level failures.  TCP failures (e.g. connection refused) would not activate throttling resulting in thousands of requests/sec and high CPU usage.	
+- convert blocknum from string to int
+- refactor common elements to bitcoin-poolserverj-core
+- fix missing semi-colons in sample sql  scripts
+
+[0.2.9]
+- fix: FastEqualsSolution not serializable causing exception dumping workmap during safe restart 
+- fix: nullpointer exception crashing cache cleaner thread leading to eventual OOM error. 
+- added generic try catch to all threads to catch unknown exceptions and prevent them stopping. - need to add 'shutdownOnCriticalError' option then these errors can be handled by shutting down the server and a wrapper script can restart.
+
+[0.2.8]
+- implement 'include' in properties to allow seperation of config blocks into different files for easy changeover
+- add check for duplicate solution on submit
+- changed 'stale-work' to 'stale' for pushpool compatibility
+- change property name 'useEasiestDifficulty' to 'useRidiculouslyEasyTargetForTesingButDONTIfThisIsARealPool' to make is clear this isn't the same as pushpools 'rpc.target.rewrite'
+- crude support for share counter table updates rather than full submits.
+- fix: cache size set to 1/2 maxCacheSize due to partially implement dynamic cache sizing
+- fix: shares accepted below difficult due to endian issues setting difficulty target. (thanks luke-jr for the help)
+- fix: duplicate work checks not working properly due to race conditions.  Moved atomic duplicate check/update operations into synchronized block.
+- fix: duplicate work not being logged
+- updated json-rpc and utils libs
+- update sample properties file to reflect recent changes.
+
+[0.2.7]
+
+ - fix: accidentally hardcoding our_result = false
+ - enabled reporting winning share to blockChainTracker which enables notifyBlockChangeMethod to report if the block was won or not.
+ - fix: UniqueDataPortiton.equals not comparing properly.  preventing hashmap lookups making valid work submits report as unknown.	
+ - added method "flushWorkers" to mgmt interface which works just like "flushWorker" except it take a "names" param with a comma delimited list	
+ 
+
+[0.2.6]
+
+ - enable different DB connection parameters (and engines) for shares and workers
+ - basic bash startup script
+ - shutdown called from command line with properties file will attempt to shutdown the server described in props file via managements interface
+ - GET requests to main listener will now assume it's a getwork request rather than refusing to respond.
+ - Resource pool implemented for request content StringBuilders
+ - fix: getwork missing some fields if target is rewritten
+
+[0.2.5]
+
+ - update to jsonrpc lib - force JsonRpcRequest.getId() to return a default value (-1) 
+ if not set.  Some clients don't implement spec properly and this was causing a nullpointerException.
+ - Cleaned up directory layout for distribution.
+ - Fix: classpath problem for windows service so no longer need to build into one monolithic jar
+ - added lib/plugins directory which is in the default classpath so plugins no longer require classpath changes.
+ - update procrunsrv to 1.07 to support wildcard classpaths
+
+[0.2.4] - unreleased
+
+ - synchronised share flush to database to prevent concurrent attempts.
+ - set server header to PoolServerJ(v<version>)
+ - implemented resource pools for recycling objects used in WorkProxy.chooseSourceForWork()
+ - Added reset(args) methods to a number of heavily used classes for recycling
+ - added example AnyPasswordWorkerAuthenticator class as used in plugin build guide: http://poolserverj.org/documentation/plugin-guide/
+
+[0.2.3]
+
+- fix: Memory usage issues for work-worker map and duplicate map
+- switched duplicate maps and work-worker maps to trove THashMap implementation and added customised hashing strategy which has yielded about a 50% boost to getwork speed
+- share database flushing now paused delayed for 4 seconds after block change to free up resources for fullfilling longpoll requests
+- implemented several bulkloader engines for share db writes which has boosted db write speed by 5-20 times depending on which engine is used.
+- partial implementation of mining extensions (reject-reason complete, rollntime and noncerange still work in progress).
+- implemented rudimentary plugin interface to allow customized engine for Authentication, worker fetching, share logging (to database only, file logging is still hardcoded)
+- major refactoring and reorganization of packages in preparation for source release. 
+
+Known issues
+ - Under heavy load shutdown may fail to trigger on the first try.  Sending a 2nd shutdown signal
+ seems to reliably complete shutdown.
+ - All new bulkloaders are not considered stable.  Use at your own risk.
+ 
+
+[0.2.2]
+
+- fix: safe restart throwing concurrent modification exceptions due to requests still being serviced during shutdown
+- added property enableSafeRestart to allow disabling
+- trimmed unnecessary data out of work-worker map entries, reduced overall memory usage by 80%
+- enable sharesToStdout and requestsToStdout options
+- added useEasiestDifficulty property to enabled stress testing of work submits
+
+
+
+Known issues
+ - Under extreme load database flush thread can become overwhelmed particularly if the server
+   is started under high load conditions and doesn't have time for JIT compiler to kick in.
+   This is currently managed by throttling work submit connections if cache entries exceeds
+   maxCacheSize.  Need to implement concurrent database writes.
+ - Block change notification currently doesn't take into account the state of the database
+   cache.  This should wait until all shares from the previous block have been flushed to
+   DB before notifying of block change.
+ - Cache flushing should be temporarily suspended after a block change to allow resources
+   to focusing on completing longpoll requests. 
+ - Memory usage.  work-worker map entries size has been reduced by 80% but it still presents
+  a theoretical limit.  With 768mb max heap size the server can handle about 1.2 million
+  cached works requests before OOM error occurs.  At about 1 million performance seriously
+  degrades due to frequent garbage collection.  The map contains shares issue in current
+  block and previous block.  So this will only be an issue for very busy servers.  Current
+  workaround is to assign more memory to JVM.  Fix will require a revisit of the work map
+  strategy to either trim the map entries even more dramatically or find a safe method of
+  pruning the map.
+
+[0.2.1]
+
+- fix: maxCacheSize was being ignored and hardcoded to 50
+- fix: thread pool size for work fetchers not being set correctly.
+- enabled allowedManagementAddresses property
+- added source.local.<n>.disabled=true option so you don't have to comment out every line of a source to disable it.
+
+[0.2.0]
+
+- first release

@@ -1,0 +1,6 @@
+This directory contain required libs that are not available in public maven repositories.
+
+If you are building with maven you can either add them to you build path manually or install them to your local
+maven repository.
+
+See 'How to build.txt' for example commands for installing to maven repo.

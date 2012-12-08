@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.shadworld</groupId>
+  <artifactId>bitcoin-jsonrpc</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-client</artifactId>
+      <version>7.4.0.v20110414</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20090211</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+    	<groupId>com.shadworld</groupId>
+    	<artifactId>shadtools-util</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    	<scope>compile</scope>
+    </dependency>
+    <dependency>
+    	<groupId>com.shadworld</groupId>
+    	<artifactId>bitcoinj</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    	<scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

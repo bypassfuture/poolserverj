@@ -1,0 +1,6 @@
+The BulkLoader engines in this package are highly experimental as at release 0.2.3 and some have some
+OS specific gotchas.
+
+DefaultPreparedStatementSharesDBFlushEngine is the original engine and is considered stable.
+
+Use the BulkLoaders at your own peril... 

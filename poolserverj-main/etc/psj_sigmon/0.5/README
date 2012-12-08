@@ -1,0 +1,24 @@
+This is a very simple and naive signal-to-message translator to sit
+between bitcoind and poolserverj.
+
+bitcoind (with JoelKatz 4diff patch) sends a SIGUSR1 to a defined pid on a
+new block event.  poolserverj supports multiple bitcoinds so it needs to
+know which one sent the signal. Apparently Java is a bit suck with signals
+hence psj_sigmon.
+
+It simply listens for a SIGUSR1, matches up the sending pid with a pidfile
+you have defined in config, then sends the matching identity to each psj you
+have also defined in the config. I fully expect this to be redundant when
+bitcoind can do the signalling itself.
+
+DISCLAIMERS:
+This is a single threaded, blocking network daemon. If any poolserverj is
+slow to accept the connect() we make to it, it will stall. If you have
+multiple poolserverj, subsequent ones will be delayed in getting the message.
+
+The config file is very basic and is just a csv using the first value per
+line as a directive then subsequent values as params. You can probably quite
+easily blow it up by feeding it crap in here.
+
+There is an arbitrary limit of 50 bitcoind definitions, and 50 psj
+definitions. Edit psj_sigmon.h if you need more.

@@ -1,0 +1,27 @@
+Recommended environment is eclipse with m2eclipse plugin installed to enabel maven dependency management.
+
+#################
+#  Maven setup  #
+#################
+
+All the jars in the lib folder are available in maven repositories and should be downloaded automatically when you set up the project if you have maven setup.
+
+If you use maven the the jars in the lib_non-maven folder will need to be installed in your maven repo for the existing POM to work without changes.
+
+mvn install:install-file  -Dfile=bitcoinj-0.0.1-SNAPSHOT.jar -DgroupId=com.shadworld -DartifactId=bitcoinj -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar
+
+mvn install:install-file  -Dfile=bitcoin-jsonrpc-0.0.1-SNAPSHOT.jar -DgroupId=com.shadworld -DartifactId=bitcoin-jsonrpc -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar
+
+mvn install:install-file  -Dfile=shadtools-util-0.0.1-SNAPSHOT.jar -DgroupId=com.shadworld -DartifactId=shadtools-util -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar
+
+mvn install:install-file  -Dfile=shadtools-sql-0.0.1-SNAPSHOT.jar -DgroupId=com.shadworld -DartifactId=shadtools-sql -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar
+
+If you have m2eclipse set you may be able to just copy the project directory 'bitcoin-poolserverj' into you workspace and open it.
+
+#################
+#Non maven setup#
+#################
+
+In eclipse create a new project with existing source and then add the content of both lib and lib_non-maven to you build path as external jars.
+
+
